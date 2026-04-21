@@ -1,0 +1,46 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/luke-gyu/dev/study/NLP && uv run python .harness/progress_sync.py --on-stop >> .harness/hook.log 2>&1"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/luke-gyu/dev/study/NLP && uv run python .harness/hooks/preflight_check.py 2>> .harness/hook.log"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/luke-gyu/dev/study/NLP && uv run python .harness/hooks/auto_commit.py 2>> .harness/hook.log"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/luke-gyu/dev/study/NLP && uv run python .harness/hooks/auto_commit.py 2>> .harness/hook.log"
+          }
+        ]
+      }
+    ]
+  }
+}

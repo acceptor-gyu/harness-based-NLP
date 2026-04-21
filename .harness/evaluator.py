@@ -138,6 +138,37 @@ def verify_python_assert(ac: dict) -> ACResult:
     )
 
 
+def verify_semantic_eval(ac: dict) -> ACResult:
+    """evaluator_llm.py를 subprocess로 호출해 LLM 기반 의미 판정을 수행한다."""
+    ac_id = ac["id"]
+    sprint_id = ac.get("sprint_id", "sprint-05")  # contract에서 주입되거나 기본값 사용
+    cmd = [
+        "uv", "run", "python", ".harness/evaluator_llm.py",
+        "--sprint", sprint_id,
+        "--ac", ac_id,
+        "--json",
+    ]
+    result = subprocess.run(cmd, cwd=PROJECT_ROOT, capture_output=True, text=True)
+    try:
+        data = json.loads(result.stdout)
+        verdict = data.get("verdict", "FAIL")
+        return ACResult(
+            ac_id=ac_id,
+            description=ac["description"],
+            verdict=verdict,
+            evidence=data.get("reasoning", ""),
+            details=data.get("details", {}),
+        )
+    except (json.JSONDecodeError, KeyError):
+        return ACResult(
+            ac_id=ac_id,
+            description=ac["description"],
+            verdict="FAIL",
+            evidence=f"evaluator_llm 출력 파싱 실패: {result.stdout[:200]}",
+            details={"stderr": result.stderr[:200]},
+        )
+
+
 VERIFIERS = {
     "command_exec": verify_command_exec,
     "file_check": verify_file_check,
@@ -145,6 +176,7 @@ VERIFIERS = {
     "python_assert": verify_python_assert,
     "integration_test": verify_command_exec,
     "log_schema": verify_file_schema,
+    "semantic_eval": verify_semantic_eval,
 }
 
 
@@ -163,6 +195,7 @@ def evaluate_sprint(sprint_id: str) -> SprintEvalResult:
 
     results: list[ACResult] = []
     for ac in sprint["acceptance_criteria"]:
+        ac = {**ac, "sprint_id": sprint_id}  # semantic_eval 핸들러에 sprint_id 전달
         verification = ac.get("verification", "command_exec")
         if verification == "metric_threshold":
             results.append(verify_metric_threshold(ac, metrics))

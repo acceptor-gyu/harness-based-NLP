@@ -165,7 +165,7 @@ sprints:
         verification: "file_schema"
       - id: "AC-05-05"
         description: "오분류 케이스 20건 분석 및 원인 분류(3개 이상 카테고리) 기록"
-        verification: "file_schema"
+        verification: "semantic_eval"
     handoff_to: "sprint-06"
 
   - id: "sprint-06"
