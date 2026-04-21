@@ -1,0 +1,42 @@
+=== HARNESS PROGRESS FILE ===
+프로젝트: 한국어 감성 분석기 (sentiment-analyzer)
+계약서: .harness/sprint-contract.yaml
+마지막 갱신: 2026-04-21 00:00 (초기 상태)
+
+=== 완료된 스프린트 ===
+(없음)
+
+=== 현재 스프린트 ===
+[PENDING] sprint-01: 환경 세팅 및 데이터 로드
+  - 다음 작업: pyproject.toml 구성 및 uv sync
+
+=== 대기 중인 스프린트 ===
+[PENDING] sprint-02: 전처리 파이프라인
+[PENDING] sprint-03: 베이스라인 모델 (TF-IDF + LogReg)
+[PENDING] sprint-04: BERT 파인튜닝
+[PENDING] sprint-05: 평가 및 리포트
+[PENDING] sprint-06: Gradio UI (선택)
+
+=== 환경 정보 ===
+Python: 3.11
+패키지 관리: uv
+데이터 경로: data/raw/
+체크포인트 경로: artifacts/checkpoints/
+리포트 경로: artifacts/
+로그 경로: logs/
+
+=== 비용 추적 ===
+누적 비용: $0.00 / $20.00 (상한)
+최근 호출 모델: (없음)
+
+=== 재시도 이력 ===
+(없음)
+
+=== 에스컬레이션 로그 ===
+(없음)
+
+=== 갱신 규칙 ===
+- Generator는 스프린트 구현 완료 후 "현재 스프린트" 섹션을 [IN_PROGRESS] → [READY_FOR_EVAL]로 변경.
+- Evaluator는 PASS 시 해당 스프린트를 "완료된 스프린트"로 이동하고 다음 스프린트를 [IN_PROGRESS]로 설정.
+- 재시도 발생 시 "재시도 이력"에 "스프린트ID / 시도 / 실패 AC / 타임스탬프" 한 줄 추가.
+- 모든 변경은 git으로 추적 (파일 변경 단독 커밋).

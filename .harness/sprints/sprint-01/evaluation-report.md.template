@@ -1,0 +1,31 @@
+# Evaluation Report: {{SPRINT_ID}}
+평가 일시: {{ISO_TIMESTAMP}}
+평가자: Evaluator-Script v1.0.0 (자동) + Evaluator-Agent (의미 판정, 선택)
+
+## 종합 판정: **PASS | FAIL**
+
+## AC별 판정 결과
+
+| AC | 판정 | 근거 |
+|----|------|------|
+| AC-XX-01 | PASS | ... |
+| AC-XX-02 | FAIL | ... |
+
+## 실패 AC 상세 (FAIL인 경우만)
+
+### AC-XX-02
+- 설명: (계약서의 description)
+- 재현 방법:
+  ```bash
+  uv run python -m src.<module>
+  ```
+- 실제 결과: ...
+- 기대 결과: ...
+- 수정 방향: (Evaluator가 제안하는 한 줄 가이드. 구현은 Generator 책임)
+
+## 다음 단계
+- PASS: Generator는 `claude-progress.txt`를 갱신하고 `handoff_to` 스프린트로 이동
+- FAIL: Generator는 위 실패 항목만 수정하여 재평가 요청 (AC 범위 밖 변경 금지)
+
+## 재시도 정보
+재시도 횟수: {{ATTEMPT}} / {{MAX_RETRIES}}

@@ -1,0 +1,194 @@
+# Single Source of Truth — Planner 출력
+# Generator와 Evaluator 모두 이 파일을 기준으로 작업/판정한다.
+
+project: "한국어 감성 분석기"
+version: "1.0.0"
+created_at: "2026-04-21"
+
+tech_stack:
+  language: "Python 3.11"
+  framework: "PyTorch 2.4 + HuggingFace Transformers 4.46"
+  baseline: "scikit-learn 1.5"
+  data: "NSMC (Naver Sentiment Movie Corpus)"
+  model_base: "klue/roberta-base"
+  package_manager: "uv"
+  test: "pytest"
+  logging: "loguru"
+
+global_constraints:
+  max_sequence_length: 128
+  random_seed: 42
+  device_preference: ["cuda", "mps", "cpu"]
+  cost_ceiling_usd: 20.0
+  retry_limit_per_sprint: 3
+
+sprints:
+
+  - id: "sprint-01"
+    title: "환경 세팅 및 데이터 로드"
+    estimated_duration: "0.5d"
+    scope:
+      - "pyproject.toml 구성 (uv, 의존성 명시)"
+      - "NSMC 데이터 다운로드 및 data/raw/ 저장"
+      - "src/data_loader.py 구현 (train/test DataFrame 반환)"
+      - "초기 EDA 노트북 작성 (클래스 분포, 길이 분포)"
+    out_of_scope:
+      - "전처리 로직 제외 (sprint-02)"
+      - "토크나이저 적용 제외 (sprint-02)"
+    acceptance_criteria:
+      - id: "AC-01-01"
+        description: "uv sync 명령으로 모든 의존성 설치 성공"
+        verification: "command_exec"
+      - id: "AC-01-02"
+        description: "data/raw/ratings_train.txt 및 ratings_test.txt 존재, 크기 > 0"
+        verification: "file_check"
+      - id: "AC-01-03"
+        description: "load_nsmc() 호출 시 train 150000건, test 50000건 반환"
+        verification: "python_assert"
+      - id: "AC-01-04"
+        description: "결측값 처리 후 document 컬럼 null 개수 = 0"
+        verification: "python_assert"
+    handoff_to: "sprint-02"
+
+  - id: "sprint-02"
+    title: "전처리 파이프라인"
+    estimated_duration: "1d"
+    scope:
+      - "src/preprocess.py 구현 (정규화, 클리닝, 불용어 제거)"
+      - "klue/roberta-base 토크나이저 적용"
+      - "Train/Val/Test 80/10/10 분할 (stratified)"
+      - "PyTorch DataLoader 구성 (batch_size=32)"
+    out_of_scope:
+      - "모델 학습 제외"
+      - "TF-IDF 벡터화 제외 (sprint-03)"
+    acceptance_criteria:
+      - id: "AC-02-01"
+        description: "토큰 길이 128 초과 샘플 비율 < 5%"
+        verification: "metric_threshold"
+        threshold: 0.05
+      - id: "AC-02-02"
+        description: "Val 세트 크기가 전체의 10% ± 1% 범위 내"
+        verification: "metric_threshold"
+      - id: "AC-02-03"
+        description: "레이블 분포가 train/val/test 간 편차 < 2%p (stratified 검증)"
+        verification: "metric_threshold"
+        threshold: 0.02
+      - id: "AC-02-04"
+        description: "DataLoader가 (input_ids, attention_mask, labels) 딕셔너리 배치 반환"
+        verification: "python_assert"
+    handoff_to: "sprint-03"
+
+  - id: "sprint-03"
+    title: "베이스라인 모델 (TF-IDF + Logistic Regression)"
+    estimated_duration: "0.5d"
+    scope:
+      - "src/baseline.py 구현"
+      - "TF-IDF 벡터화 (ngram=(1,2), max_features=20000)"
+      - "LogisticRegression 학습 (C=1.0, max_iter=1000)"
+      - "artifacts/baseline_metrics.json 저장"
+    out_of_scope:
+      - "딥러닝 모델 학습 제외 (sprint-04)"
+      - "하이퍼파라미터 튜닝 제외"
+    acceptance_criteria:
+      - id: "AC-03-01"
+        description: "Test Accuracy ≥ 0.85"
+        verification: "metric_threshold"
+        threshold: 0.85
+      - id: "AC-03-02"
+        description: "Test Macro F1 ≥ 0.83"
+        verification: "metric_threshold"
+        threshold: 0.83
+      - id: "AC-03-03"
+        description: "artifacts/baseline_metrics.json 파일에 accuracy, precision, recall, f1 저장"
+        verification: "file_schema"
+      - id: "AC-03-04"
+        description: "pytest tests/test_baseline.py 전체 통과"
+        verification: "command_exec"
+    handoff_to: "sprint-04"
+
+  - id: "sprint-04"
+    title: "BERT 파인튜닝"
+    estimated_duration: "2d"
+    scope:
+      - "src/train.py 구현 (AutoModelForSequenceClassification 기반)"
+      - "AdamW 옵티마이저 + Linear Warmup 스케줄러 (warmup_ratio=0.1)"
+      - "학습 루프 (epoch=3, lr=2e-5, weight_decay=0.01)"
+      - "Val loss 기반 Early Stopping (patience=1)"
+      - "체크포인트 저장 (artifacts/checkpoints/best_<timestamp>.pt)"
+      - "TensorBoard 또는 wandb 로깅 (선택)"
+    out_of_scope:
+      - "Test 세트 평가 제외 (sprint-05)"
+      - "앙상블 제외"
+    acceptance_criteria:
+      - id: "AC-04-01"
+        description: "Val Accuracy ≥ 0.90"
+        verification: "metric_threshold"
+        threshold: 0.90
+      - id: "AC-04-02"
+        description: "학습 로그에 epoch별 train_loss, val_loss, val_acc 기록"
+        verification: "log_schema"
+      - id: "AC-04-03"
+        description: "Best 체크포인트가 artifacts/checkpoints/에 저장되고 로드 가능"
+        verification: "command_exec"
+      - id: "AC-04-04"
+        description: "Val loss 상승 시 Early Stopping 정상 동작 (로그 확인)"
+        verification: "log_schema"
+      - id: "AC-04-05"
+        description: "재현성: 동일 시드로 재학습 시 Val Accuracy 편차 < 0.5%p"
+        verification: "metric_threshold"
+    handoff_to: "sprint-05"
+
+  - id: "sprint-05"
+    title: "평가 및 리포트"
+    estimated_duration: "0.5d"
+    scope:
+      - "src/evaluate.py 구현 (best 체크포인트 로드 후 Test 평가)"
+      - "Confusion Matrix 이미지 생성 (artifacts/confusion_matrix.png)"
+      - "오분류 샘플 상위 20개 추출 및 분석"
+      - "artifacts/eval_report.md 작성 (베이스라인 vs BERT 비교 포함)"
+    out_of_scope:
+      - "UI/서빙 제외 (sprint-06)"
+    acceptance_criteria:
+      - id: "AC-05-01"
+        description: "Test Accuracy ≥ 0.90"
+        verification: "metric_threshold"
+        threshold: 0.90
+      - id: "AC-05-02"
+        description: "Test Macro F1 ≥ 0.88"
+        verification: "metric_threshold"
+        threshold: 0.88
+      - id: "AC-05-03"
+        description: "artifacts/confusion_matrix.png 존재, PNG 유효"
+        verification: "file_check"
+      - id: "AC-05-04"
+        description: "artifacts/eval_report.md에 베이스라인 vs BERT 성능 비교표 포함"
+        verification: "file_schema"
+      - id: "AC-05-05"
+        description: "오분류 케이스 20건 분석 및 원인 분류(3개 이상 카테고리) 기록"
+        verification: "file_schema"
+    handoff_to: "sprint-06"
+
+  - id: "sprint-06"
+    title: "Gradio UI (선택)"
+    optional: true
+    estimated_duration: "1d"
+    scope:
+      - "src/serve.py 구현 (Gradio Interface)"
+      - "텍스트 입력 → 긍정/부정 + 신뢰도 출력"
+      - "모델 로딩은 앱 시작 시 1회 (캐시)"
+      - "배포 스크립트 작성 (bash 또는 Dockerfile)"
+    out_of_scope:
+      - "인증 제외"
+      - "다중 언어 지원 제외"
+    acceptance_criteria:
+      - id: "AC-06-01"
+        description: "로컬 실행 시 http://localhost:7860 접속 가능"
+        verification: "command_exec"
+      - id: "AC-06-02"
+        description: "예시 입력 '이 영화 정말 재미있어요!' → 긍정 (신뢰도 > 0.9)"
+        verification: "integration_test"
+      - id: "AC-06-03"
+        description: "단일 요청 응답 시간 < 1초 (CPU 기준)"
+        verification: "metric_threshold"
+        threshold: 1.0
+    handoff_to: null

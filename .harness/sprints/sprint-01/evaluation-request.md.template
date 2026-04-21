@@ -1,0 +1,40 @@
+# Evaluation Request: {{SPRINT_ID}}
+
+> Generator → Evaluator 핸드오프 문서.
+> Evaluator는 이 파일과 sprint-contract.yaml만으로 독립 판정한다.
+> Generator의 자기 평가/의도는 포함하지 않는다.
+
+## 구현 완료 항목
+- (구현한 파일/기능을 bullet으로 나열)
+- 예) `src/data_loader.py`: NSMC 로드, 결측값 제거
+- 예) `tests/test_data_loader.py`: 행 개수 및 결측값 검증 테스트 3건
+
+## 실행 방법
+```bash
+# 의존성 설치
+uv sync
+
+# 기능 실행
+uv run python -m src.<module>
+
+# 테스트 실행
+uv run pytest tests/
+```
+
+## 검증 요청 AC (sprint-contract.yaml 기준)
+- [ ] AC-XX-01: (계약서의 description 복사)
+- [ ] AC-XX-02: ...
+
+## 주요 변경 파일
+- (수정/추가된 파일 경로 나열, 불필요한 상세 구현 설명 금지)
+
+## 아티팩트 위치
+- 메트릭: `artifacts/{{SPRINT_ID}}_metrics.json`
+- 로그: `logs/{{SPRINT_ID}}.log`
+
+## 알려진 제한사항
+- (다음 스프린트에서 처리될 항목 명시)
+
+## 비고
+- 커밋 해시: `<short_sha>`
+- 브랜치: `sprint-XX/<slug>`
