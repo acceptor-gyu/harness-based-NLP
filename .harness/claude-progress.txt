@@ -1,25 +1,28 @@
 === HARNESS PROGRESS FILE ===
 프로젝트: 한국어 감성 분석기 (sentiment-analyzer)
 계약서: .harness/sprint-contract.yaml
-마지막 갱신: 2026-04-21 00:00 (초기 상태)
+마지막 갱신: 2026-04-23 16:15 (sprint-01 재검증 PASS)
 
 === 완료된 스프린트 ===
-(없음)
+[DONE] sprint-01: 환경 세팅 및 데이터 로드
+  - 완료: 2026-04-23
+  - 브랜치: sprint-01/env-setup
+  - 결과: PASS (AC-01-01, AC-01-02, AC-01-03, AC-01-04 전체 PASS)
+  - 비고: train 149995건, test 49997건 (원본 결측값 5건/3건 제거)
 
 === 현재 스프린트 ===
-[PENDING] sprint-01: 환경 세팅 및 데이터 로드
-  - 다음 작업: pyproject.toml 구성 및 uv sync
+[IN_PROGRESS] sprint-02: 전처리 파이프라인
+  - 다음 작업: src/preprocess.py 구현 (정규화, 클리닝, 불용어 제거)
 
 === 대기 중인 스프린트 ===
-[PENDING] sprint-02: 전처리 파이프라인
 [PENDING] sprint-03: 베이스라인 모델 (TF-IDF + LogReg)
 [PENDING] sprint-04: BERT 파인튜닝
 [PENDING] sprint-05: 평가 및 리포트
 [PENDING] sprint-06: Gradio UI (선택)
 
 === 환경 정보 ===
-Python: 3.11
-패키지 관리: uv
+Python: 3.12.2 (uv 환경)
+패키지 관리: uv 0.11.7
 데이터 경로: data/raw/
 체크포인트 경로: artifacts/checkpoints/
 리포트 경로: artifacts/
@@ -27,7 +30,7 @@ Python: 3.11
 
 === 비용 추적 ===
 누적 비용: $0.00 / $20.00 (상한)
-최근 호출 모델: (없음)
+최근 호출 모델: claude-sonnet-4-6
 
 === 재시도 이력 ===
 (없음)
