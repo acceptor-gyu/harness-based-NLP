@@ -39,15 +39,29 @@ sprints:
       - id: "AC-01-01"
         description: "uv sync 명령으로 모든 의존성 설치 성공"
         verification: "command_exec"
+        command: "uv sync"
       - id: "AC-01-02"
         description: "data/raw/ratings_train.txt 및 ratings_test.txt 존재, 크기 > 0"
         verification: "file_check"
+        paths:
+          - "data/raw/ratings_train.txt"
+          - "data/raw/ratings_test.txt"
       - id: "AC-01-03"
         description: "load_nsmc() 호출 시 train 150000건, test 50000건 반환"
         verification: "python_assert"
+        script: |
+          from src.data_loader import load_nsmc
+          train_df, test_df = load_nsmc()
+          assert len(train_df) >= 149990, f'train 건수 부족: {len(train_df)}'
+          assert len(test_df) >= 49990, f'test 건수 부족: {len(test_df)}'
       - id: "AC-01-04"
         description: "결측값 처리 후 document 컬럼 null 개수 = 0"
         verification: "python_assert"
+        script: |
+          from src.data_loader import load_nsmc
+          train_df, test_df = load_nsmc()
+          assert train_df['document'].isnull().sum() == 0, f'train null: {train_df["document"].isnull().sum()}'
+          assert test_df['document'].isnull().sum() == 0, f'test null: {test_df["document"].isnull().sum()}'
     handoff_to: "sprint-02"
 
   - id: "sprint-02"
