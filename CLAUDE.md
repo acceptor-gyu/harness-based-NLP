@@ -19,7 +19,7 @@
 - 각 스프린트는 독립 검증 가능해야 함.
 - AC는 스프린트당 3~5개, 수치 기반 우선.
 
-## Generator (Sonnet)
+## Planner/Generator (Sonnet)
 - `.harness/sprint-contract.yaml` + `.harness/claude-progress.txt` 읽고 시작.
 - 작업 완료 시 `.harness/sprints/sprint-XX/evaluation-request.md` 작성.
 - 스프린트 브랜치 사용: `sprint-XX/<slug>`.
@@ -30,7 +30,7 @@
 ## Orchestrator
 - `uv run python .harness/orchestrator.py --sprint sprint-XX` 로 단일 스프린트 실행.
 - `--all` 플래그로 sprint-01 ~ sprint-05 전체 자동 실행.
-- Generator 서브에이전트를 Anthropic SDK tool-use 루프로 spawn함.
+- Planner 서브에이전트를 Anthropic SDK tool-use 루프로 spawn함.
 
 ## Evaluator (Haiku + 자동화)
 - `python .harness/evaluator.py --sprint sprint-XX` 실행으로 수치 판정 우선.
