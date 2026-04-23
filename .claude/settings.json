@@ -21,26 +21,6 @@
           }
         ]
       }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cd /Users/luke-gyu/dev/study/NLP && uv run python .harness/hooks/auto_commit.py 2>> .harness/hook.log"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cd /Users/luke-gyu/dev/study/NLP && uv run python .harness/hooks/auto_commit.py 2>> .harness/hook.log"
-          }
-        ]
-      }
     ]
   }
 }
