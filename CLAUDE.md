@@ -27,14 +27,15 @@
 - 구현 후 반드시 `pytest` 실행하여 자체 검증.
 - 완료 선언 금지 — Evaluator가 판정.
 
-## Orchestrator
-- `uv run python .harness/orchestrator.py --sprint sprint-XX` 로 단일 스프린트 실행.
-- `--all` 플래그로 sprint-01 ~ sprint-05 전체 자동 실행.
-- Planner 서브에이전트를 Anthropic SDK tool-use 루프로 spawn함.
+## Orchestrator (Claude Code Agent)
+- 실행: `Agent(subagent_type="orchestrator", prompt="sprint-XX를 실행하십시오.")`
+- planner → 병렬 리뷰어(bug/ml/test) → review-synthesis → slop-cleaner → evaluator 순으로 서브에이전트를 조율.
+- semantic_eval AC는 evaluator-llm 서브에이전트로 위임.
+- Stop Condition 및 최대 3회 재시도 관리는 orchestrator 에이전트 내에서 처리.
 
-## Evaluator (Haiku + 자동화)
-- `python .harness/evaluator.py --sprint sprint-XX` 실행으로 수치 판정 우선.
-- `semantic_eval` 타입 AC는 `.harness/evaluator_llm.py`(Haiku)로 위임.
+## Evaluator (자동화 + Haiku 서브에이전트)
+- `uv run python .harness/evaluator.py --sprint sprint-XX --json` 으로 수치/파일/명령 판정.
+- `semantic_eval` 타입 AC는 evaluator.py가 SKIP 반환 → orchestrator가 evaluator-llm 서브에이전트 spawn.
 - 코드 읽기만으로 판정 금지. 반드시 실행/테스트 결과 기반.
 - 호의적 해석 금지. AC 미충족은 FAIL.
 - 출력은 `.harness/sprints/sprint-XX/evaluation-report.md`.
