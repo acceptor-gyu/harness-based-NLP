@@ -27,6 +27,14 @@ def _load_file(path: Path) -> pd.DataFrame:
     original_len = len(df)
     logger.debug(f"원본 로드: {path.name} → {original_len}건")
 
+    required_cols = {"id", "document", "label"}
+    missing_cols = required_cols - set(df.columns)
+    if missing_cols:
+        raise ValueError(
+            f"필수 컬럼 누락: {missing_cols} in {path}\n"
+            f"실제 컬럼: {list(df.columns)}"
+        )
+
     # 결측값 처리: NaN 제거 후 빈 문자열도 제거
     df = df.dropna(subset=["document"])
     df = df[df["document"].str.strip() != ""]
