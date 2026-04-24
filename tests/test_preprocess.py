@@ -171,7 +171,6 @@ class TestFullPipeline:
         train_df, test_df = nsmc_data
         # 샘플링으로 속도 개선 (전체의 5%)
         sample = train_df.sample(n=5000, random_state=42)
-        from src.preprocess import clean_text
         texts = sample["document"].apply(lambda x: clean_text(x)).tolist()
         stats = compute_token_length_stats(texts, tokenizer, max_length=128)
         assert stats["over_ratio"] < 0.05, (

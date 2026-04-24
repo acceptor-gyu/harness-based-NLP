@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 import torch
 from loguru import logger
@@ -232,20 +233,14 @@ def compute_token_length_stats(
     Returns:
         mean, median, max, over_ratio (max_length 초과 비율) 포함 딕셔너리.
     """
-    lengths = []
-    for text in texts:
-        enc = tokenizer(text, truncation=False, padding=False)
-        lengths.append(len(enc["input_ids"]))
-
-    import numpy as np
-
-    arr = np.array(lengths)
+    encodings = tokenizer(texts, truncation=False, padding=False)
+    arr = np.array([len(ids) for ids in encodings["input_ids"]])
     over_count = int((arr > max_length).sum())
     over_ratio = over_count / len(arr) if len(arr) > 0 else 0.0
 
     stats = {
         "mean": float(arr.mean()),
-        "median": float(float(pd.Series(arr).median())),
+        "median": float(np.median(arr)),
         "max": int(arr.max()),
         "over_ratio": over_ratio,
         "over_count": over_count,
