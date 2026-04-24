@@ -19,7 +19,7 @@
 - 각 스프린트는 독립 검증 가능해야 함.
 - AC는 스프린트당 3~5개, 수치 기반 우선.
 
-## Planner/Generator (Sonnet)
+## Generator (Sonnet)
 - `.harness/sprint-contract.yaml` + `.harness/claude-progress.txt` 읽고 시작.
 - 작업 완료 시 `.harness/sprints/sprint-XX/evaluation-request.md` 작성.
 - 스프린트 브랜치 사용: `sprint-XX/<slug>`.
@@ -29,7 +29,7 @@
 
 ## Orchestrator (Claude Code Agent)
 - 실행: `Agent(subagent_type="orchestrator", prompt="sprint-XX를 실행하십시오.")`
-- planner → 병렬 리뷰어(bug/ml/test) → review-synthesis → slop-cleaner → evaluator 순으로 서브에이전트를 조율.
+- sprint-contract.yaml 없으면 planner 먼저 실행 → plan-validator → generator → 병렬 리뷰어(bug/ml/test) → review-synthesis → slop-cleaner → evaluator 순으로 서브에이전트를 조율.
 - semantic_eval AC는 evaluator-llm 서브에이전트로 위임.
 - Stop Condition 및 최대 3회 재시도 관리는 orchestrator 에이전트 내에서 처리.
 

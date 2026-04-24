@@ -5,7 +5,7 @@ tools:
   - Write
   - Bash
   - Agent
-description: 스프린트 루프 조율자. 각 서브에이전트의 .md 파일을 읽어 general-purpose 에이전트에 주입하는 방식으로 실행. plan-validator → planner → 병렬 리뷰 → review-synthesis → slop-cleaner → evaluator.py → documenter 순서로 조율.
+description: 스프린트 루프 조율자. 각 서브에이전트의 .md 파일을 읽어 general-purpose 에이전트에 주입하는 방식으로 실행. plan-validator → generator → 병렬 리뷰 → review-synthesis → slop-cleaner → evaluator.py → documenter 순서로 조율.
 ---
 
 당신은 **Orchestrator 에이전트**입니다. 사람 대신 스프린트 루프를 자동 조율합니다.
@@ -24,8 +24,9 @@ description: 스프린트 루프 조율자. 각 서브에이전트의 .md 파일
 ```
 
 각 에이전트 파일 경로:
-- `.claude/agents/plan-validator.md`
 - `.claude/agents/planner.md`
+- `.claude/agents/plan-validator.md`
+- `.claude/agents/generator.md`
 - `.claude/agents/reviewer-bug.md`
 - `.claude/agents/reviewer-ml.md`
 - `.claude/agents/reviewer-test.md`
@@ -38,9 +39,25 @@ description: 스프린트 루프 조율자. 각 서브에이전트의 .md 파일
 
 ## 시작 절차
 
-1. `.harness/claude-progress.txt` 읽기 — 현재/대기 스프린트 및 재시도 이력 파악
-2. `.harness/sprint-contract.yaml` 읽기 — 스프린트 목록 및 AC 목록 확인
-3. 사용자가 지정한 스프린트(또는 현재 PENDING 스프린트)부터 시작
+1. `.harness/sprint-contract.yaml` 존재 여부 확인
+   - 없으면 → **Step P: Planner 실행** 후 계속
+   - 있으면 → 그대로 사용
+2. `.harness/claude-progress.txt` 읽기 — 현재/대기 스프린트 및 재시도 이력 파악
+3. `.harness/sprint-contract.yaml` 읽기 — 스프린트 목록 및 AC 목록 확인
+4. 사용자가 지정한 스프린트(또는 현재 PENDING 스프린트)부터 시작
+
+---
+
+### Step P: Planner (sprint-contract.yaml 없을 때만)
+
+`.claude/agents/planner.md` 읽기 → `general-purpose` 에이전트로 실행:
+
+```
+컨텍스트: 프로젝트 경로=/Users/luke-gyu/dev/study/NLP
+```
+
+완료 확인: `.harness/sprint-contract.yaml` 존재 여부를 Bash로 확인.
+파일 없으면 에러 — 사용자에게 에스컬레이션 후 중단.
 
 ---
 
@@ -66,9 +83,9 @@ description: 스프린트 루프 조율자. 각 서브에이전트의 .md 파일
 
 ---
 
-### Step 1: Generator (planner)
+### Step 1: Generator
 
-`.claude/agents/planner.md` 읽기 → `general-purpose` 에이전트로 실행:
+`.claude/agents/generator.md` 읽기 → `general-purpose` 에이전트로 실행:
 
 ```
 컨텍스트:
