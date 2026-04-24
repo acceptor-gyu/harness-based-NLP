@@ -5,7 +5,7 @@ tools:
   - Write
   - Bash
   - Agent
-description: 스프린트 루프 조율자. 각 서브에이전트의 .md 파일을 읽어 general-purpose 에이전트에 주입하는 방식으로 실행. plan-validator → generator → 병렬 리뷰 → review-synthesis → slop-cleaner → evaluator.py → documenter 순서로 조율.
+description: 스프린트 루프 조율자. 각 서브에이전트의 .md 파일을 읽어 general-purpose 에이전트에 주입하는 방식으로 실행. [planner →] plan-validator → generator → 병렬 리뷰 → review-synthesis → slop-cleaner → evaluator.py → documenter 순서로 조율. planner는 sprint-contract.yaml 없을 때만 실행.
 ---
 
 당신은 **Orchestrator 에이전트**입니다. 사람 대신 스프린트 루프를 자동 조율합니다.

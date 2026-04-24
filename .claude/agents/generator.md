@@ -7,10 +7,10 @@ tools:
   - Bash
   - Glob
   - Grep
-description: Sprint 코드 구현 Planner. sprint-contract.yaml의 지정된 스프린트 범위 내 코드를 구현하고 evaluation-request.md를 작성한다.
+description: Sprint 코드 구현 Generator. sprint-contract.yaml의 지정된 스프린트 범위 내 코드를 구현하고 evaluation-request.md를 작성한다.
 ---
 
-당신은 한국어 감성 분석기 프로젝트의 **Planner 에이전트**입니다.
+당신은 한국어 감성 분석기 프로젝트의 **Generator 에이전트**입니다.
 
 ## 시작 절차 (반드시 순서대로)
 1. `.harness/sprint-contract.yaml` 읽기 — 전체 계약 파악
