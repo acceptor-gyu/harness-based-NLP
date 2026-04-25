@@ -4,19 +4,19 @@
 마지막 갱신: 2026-04-25 13:08 UTC (session=9bcdcf51)
 
 === 완료된 스프린트 ===
-[DONE] sprint-01: 환경 세팅 및 데이터 로드
+[PASS] sprint-01: 환경 세팅 및 데이터 로드
   - 완료: 2026-04-23
   - 브랜치: sprint-01/env-setup
   - 결과: PASS (AC-01-01, AC-01-02, AC-01-03, AC-01-04 전체 PASS)
   - 비고: train 149995건, test 49997건 (원본 결측값 5건/3건 제거)
 
-[DONE] sprint-02: 전처리 파이프라인
+[PASS] sprint-02: 전처리 파이프라인
   - 완료: 2026-04-23
   - 브랜치: sprint-02/preprocessing-pipeline
   - 결과: PASS (AC-02-01, AC-02-02, AC-02-03, AC-02-04 전체 PASS)
   - 비고: 토큰 128초과=0%, val_ratio=10.0%, 레이블편차=0.46%p, DataLoader 배치 확인
 
-[DONE] sprint-03: 베이스라인 모델 (TF-IDF + LogReg)
+[PASS] sprint-03: 베이스라인 모델 (TF-IDF + LogReg)
   - 완료: 2026-04-25
   - 브랜치: sprint-03/baseline-model
   - 결과: PASS (AC-03-01, AC-03-02, AC-03-03, AC-03-04 전체 PASS)

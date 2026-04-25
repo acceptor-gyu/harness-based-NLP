@@ -146,19 +146,32 @@ sprints:
       - id: "AC-04-01"
         description: "Val Accuracy ≥ 0.90"
         verification: "metric_threshold"
+        metric_key: "val_accuracy"
         threshold: 0.90
       - id: "AC-04-02"
         description: "학습 로그에 epoch별 train_loss, val_loss, val_acc 기록"
         verification: "log_schema"
+        path: "artifacts/sprint-04_metrics.json"
+        required_keys:
+          - "train_loss"
+          - "val_loss"
+          - "val_acc"
       - id: "AC-04-03"
         description: "Best 체크포인트가 artifacts/checkpoints/에 저장되고 로드 가능"
         verification: "command_exec"
+        command: "uv run python -c \"from pathlib import Path; import torch; ckpts = list(Path('artifacts/checkpoints').glob('best_*.pt')); assert len(ckpts) > 0, 'No checkpoint found'; ckpt = torch.load(ckpts[0], map_location='cpu', weights_only=False); assert 'model_state_dict' in ckpt, 'Invalid checkpoint'\""
       - id: "AC-04-04"
         description: "Val loss 상승 시 Early Stopping 정상 동작 (로그 확인)"
         verification: "log_schema"
+        path: "artifacts/sprint-04_metrics.json"
+        required_keys:
+          - "epoch_logs"
+          - "best_epoch"
       - id: "AC-04-05"
         description: "재현성: 동일 시드로 재학습 시 Val Accuracy 편차 < 0.5%p"
         verification: "metric_threshold"
+        metric_key: "val_accuracy"
+        threshold: 0.89
     handoff_to: "sprint-05"
 
   - id: "sprint-05"
