@@ -32,3 +32,6 @@ target-version = "py311"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+markers = [
+  "slow: 전체 데이터셋으로 실행하는 통합 테스트 (학습 포함)",
+]
