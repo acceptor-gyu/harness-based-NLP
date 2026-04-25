@@ -105,17 +105,24 @@ description: 스프린트 루프 조율자. 각 서브에이전트의 .md 파일
 
 ### Step 2: 병렬 코드 리뷰 (3개 동시 spawn)
 
+> ⚠️ **건너뛰기 금지**: 리뷰 단계는 선택이 아닌 필수입니다. Step 2~3 없이 Step 4 이후로 진행 불가.
+
 아래 세 에이전트를 **단일 응답에서 동시에** spawn:
 
 - `.claude/agents/reviewer-bug.md` 읽기 → `general-purpose`, 컨텍스트: `SPRINT_ID=<sprint-XX>`
 - `.claude/agents/reviewer-ml.md` 읽기 → `general-purpose`, 컨텍스트: `SPRINT_ID=<sprint-XX>`
 - `.claude/agents/reviewer-test.md` 읽기 → `general-purpose`, 컨텍스트: `SPRINT_ID=<sprint-XX>`
 
-세 결과 JSON에서 각각 `critical_count` 추출 → 합산하여 `total_critical` 계산.
+**완료 검증** (세 에이전트 결과 수신 후 즉시):
+- 각 결과에서 `critical_count` 필드가 존재하는지 확인
+- 필드가 없거나 JSON 파싱 실패 시 → 해당 리뷰어를 `critical_count=1`로 간주
+- 세 값을 합산하여 `total_critical` 계산
 
 ---
 
 ### Step 3: Review Synthesis
+
+> ⚠️ **게이트**: `review-report.md`가 생성되지 않으면 Step 4 진행 불가.
 
 `.claude/agents/review-synthesis.md` 읽기 → `general-purpose` 에이전트로 실행:
 
@@ -128,7 +135,12 @@ description: 스프린트 루프 조율자. 각 서브에이전트의 .md 파일
 - REVIEWER_TEST: <Step 2 reviewer-test JSON 전체>
 ```
 
-`.harness/sprints/<SPRINT_ID>/review-report.md` 생성 여부 확인.
+**완료 검증** — Bash로 파일 존재 확인:
+```bash
+ls .harness/sprints/<SPRINT_ID>/review-report.md
+```
+- 파일 없음 → Review Synthesis 1회 재실행. 재실행 후에도 없으면 `.harness/escalation-log.md`에 기록 후 중단.
+- 파일 있음 → 분기 판정 진행.
 
 **분기:**
 - `total_critical > 0` → review-report.md 경로를 피드백으로 전달하고 attempt+1, Step 1로 돌아가 Generator 재실행
@@ -150,6 +162,13 @@ description: 스프린트 루프 조율자. 각 서브에이전트의 .md 파일
 ---
 
 ### Step 5: 자동 평가
+
+> ⚠️ **사전 조건**: 아래 Bash 확인을 먼저 실행. `review-report.md`가 없으면 평가 실행 금지 — Step 2로 강제 회귀.
+
+```bash
+ls .harness/sprints/<SPRINT_ID>/review-report.md || echo "MISSING"
+```
+`MISSING`이 출력되면 Step 2부터 재실행하고 이 사실을 에스컬레이션 로그에 기록.
 
 ```bash
 cd /Users/luke-gyu/dev/study/NLP && uv run python .harness/evaluator.py --sprint <SPRINT_ID> --json
@@ -235,6 +254,8 @@ git commit -m "[harness] <SPRINT_ID> → PASS"
 | plan-validator `BLOCKED` | `.harness/escalation-log.md`에 기록, 중단 |
 | 동일 AC가 3회 연속 `failed_acs`에 등장 | `.harness/escalation-log.md`에 기록 후 중단 |
 | Generator가 evaluation-request.md 미작성 | FAIL 처리, attempt+1 |
+| review-report.md 없이 Step 5 진행 시도 | Step 2로 강제 회귀, 에스컬레이션 로그 기록 |
+| Review Synthesis 2회 실행 후 review-report.md 미생성 | 에스컬레이션 후 중단 |
 | slop-cleaner pytest 실패 보고 | 수정 없이 원본 유지, Step 5로 진행 |
 
 ---
