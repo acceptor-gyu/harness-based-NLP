@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 
 import pytest
+from sklearn.pipeline import Pipeline
 
 from src.baseline import (
     ARTIFACTS_DIR,
@@ -29,8 +30,6 @@ from src.baseline import (
 
 def test_build_pipeline_returns_pipeline() -> None:
     """build_pipeline()이 올바른 sklearn Pipeline을 반환하는지 확인한다."""
-    from sklearn.pipeline import Pipeline
-
     pipeline = build_pipeline()
     assert isinstance(pipeline, Pipeline), "Pipeline 객체가 반환되어야 한다"
     assert "features" in pipeline.named_steps, "features 스텝이 있어야 한다"
@@ -123,13 +122,18 @@ def test_save_metrics_required_keys(tmp_path: Path) -> None:
 # ──────────────────────────────────────────────
 
 
-@pytest.mark.slow
-def test_run_baseline_accuracy(tmp_path: Path) -> None:
-    """AC-03-01: Test Accuracy >= 0.85."""
-    metrics_path = tmp_path / "baseline_metrics.json"
+@pytest.fixture(scope="module")
+def baseline_result(tmp_path_factory: pytest.TempPathFactory) -> dict:
+    """run_baseline()을 모듈 내에서 한 번만 실행하고 결과를 공유한다."""
+    metrics_path = tmp_path_factory.mktemp("baseline") / "baseline_metrics.json"
     metrics = run_baseline(save=True, metrics_path=metrics_path)
+    return {"metrics": metrics, "metrics_path": metrics_path}
 
-    accuracy = metrics["accuracy"]
+
+@pytest.mark.slow
+def test_run_baseline_accuracy(baseline_result: dict) -> None:
+    """AC-03-01: Test Accuracy >= 0.85."""
+    accuracy = baseline_result["metrics"]["accuracy"]
     assert accuracy >= 0.85, (
         f"AC-03-01 FAIL: Test Accuracy={accuracy:.4f} < 0.85\n"
         f"재현: uv run python -c \"from src.baseline import run_baseline; run_baseline()\""
@@ -137,12 +141,9 @@ def test_run_baseline_accuracy(tmp_path: Path) -> None:
 
 
 @pytest.mark.slow
-def test_run_baseline_f1(tmp_path: Path) -> None:
+def test_run_baseline_f1(baseline_result: dict) -> None:
     """AC-03-02: Test Macro F1 >= 0.83."""
-    metrics_path = tmp_path / "baseline_metrics.json"
-    metrics = run_baseline(save=True, metrics_path=metrics_path)
-
-    f1 = metrics["f1"]
+    f1 = baseline_result["metrics"]["f1"]
     assert f1 >= 0.83, (
         f"AC-03-02 FAIL: Test Macro F1={f1:.4f} < 0.83\n"
         f"재현: uv run python -c \"from src.baseline import run_baseline; run_baseline()\""
@@ -150,10 +151,9 @@ def test_run_baseline_f1(tmp_path: Path) -> None:
 
 
 @pytest.mark.slow
-def test_run_baseline_metrics_file_schema(tmp_path: Path) -> None:
+def test_run_baseline_metrics_file_schema(baseline_result: dict) -> None:
     """AC-03-03: artifacts/baseline_metrics.json에 accuracy, precision, recall, f1 저장."""
-    metrics_path = tmp_path / "baseline_metrics.json"
-    run_baseline(save=True, metrics_path=metrics_path)
+    metrics_path = baseline_result["metrics_path"]
 
     assert metrics_path.exists(), (
         f"AC-03-03 FAIL: metrics 파일이 존재하지 않는다: {metrics_path}\n"
