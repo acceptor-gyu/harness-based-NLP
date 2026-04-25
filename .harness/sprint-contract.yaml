@@ -107,17 +107,26 @@ sprints:
       - id: "AC-03-01"
         description: "Test Accuracy ≥ 0.85"
         verification: "metric_threshold"
+        metric_key: "accuracy"
         threshold: 0.85
       - id: "AC-03-02"
         description: "Test Macro F1 ≥ 0.83"
         verification: "metric_threshold"
+        metric_key: "f1"
         threshold: 0.83
       - id: "AC-03-03"
         description: "artifacts/baseline_metrics.json 파일에 accuracy, precision, recall, f1 저장"
         verification: "file_schema"
+        path: "artifacts/baseline_metrics.json"
+        required_keys:
+          - "accuracy"
+          - "precision"
+          - "recall"
+          - "f1"
       - id: "AC-03-04"
         description: "pytest tests/test_baseline.py 전체 통과"
         verification: "command_exec"
+        command: "uv run pytest tests/test_baseline.py -v"
     handoff_to: "sprint-04"
 
   - id: "sprint-04"

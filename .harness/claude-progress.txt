@@ -1,7 +1,7 @@
 === HARNESS PROGRESS FILE ===
 프로젝트: 한국어 감성 분석기 (sentiment-analyzer)
 계약서: .harness/sprint-contract.yaml
-마지막 갱신: 2026-04-23 20:31 (sprint-02 재검증 PASS)
+마지막 갱신: 2026-04-25 13:08 UTC (session=9bcdcf51)
 
 === 완료된 스프린트 ===
 [DONE] sprint-01: 환경 세팅 및 데이터 로드
@@ -16,12 +16,17 @@
   - 결과: PASS (AC-02-01, AC-02-02, AC-02-03, AC-02-04 전체 PASS)
   - 비고: 토큰 128초과=0%, val_ratio=10.0%, 레이블편차=0.46%p, DataLoader 배치 확인
 
+[DONE] sprint-03: 베이스라인 모델 (TF-IDF + LogReg)
+  - 완료: 2026-04-25
+  - 브랜치: sprint-03/baseline-model
+  - 결과: PASS (AC-03-01, AC-03-02, AC-03-03, AC-03-04 전체 PASS)
+  - 비고: accuracy=0.8612, f1=0.8612 (word+char TF-IDF FeatureUnion + LR)
+
 === 현재 스프린트 ===
-[IN_PROGRESS] sprint-03: 베이스라인 모델 (TF-IDF + LogReg)
-  - 다음 작업: src/baseline.py 구현
+[IN_PROGRESS] sprint-04: BERT 파인튜닝
+  - 다음 작업: src/train.py 구현 (AutoModelForSequenceClassification)
 
 === 대기 중인 스프린트 ===
-[PENDING] sprint-04: BERT 파인튜닝
 [PENDING] sprint-05: 평가 및 리포트
 [PENDING] sprint-06: Gradio UI (선택)
 
