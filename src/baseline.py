@@ -231,6 +231,10 @@ def run_baseline(
     # 5. 메트릭 저장
     if save:
         save_metrics(metrics, path=metrics_path)
+        # evaluator.py 가 기대하는 sprint-03_metrics.json 에도 동일 내용 저장
+        sprint_metrics_path = ARTIFACTS_DIR / "sprint-03_metrics.json"
+        if metrics_path != sprint_metrics_path:
+            save_metrics(metrics, path=sprint_metrics_path)
 
     logger.info("=== 베이스라인 파이프라인 완료 ===")
     return metrics
