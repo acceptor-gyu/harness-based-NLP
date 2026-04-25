@@ -183,9 +183,15 @@ stdout JSON에서 추출:
 
 ### Step 6: 판정 분기
 
-**PASS인 경우:**
+> ⚠️ **종료 금지 조건**: evaluator PASS 확인만으로 절대 종료하지 말 것. PASS 시 아래 3단계를 모두 완료한 후에만 종료 가능.
 
-1. **Documenter 실행** — `.claude/agents/documenter.md` 읽기 → `general-purpose` 에이전트로 실행:
+---
+
+**PASS인 경우 — 아래 순서대로 반드시 실행:**
+
+**6-1. Documenter 실행** (필수, 건너뛰기 금지)
+
+`.claude/agents/documenter.md` 읽기 → `general-purpose` 에이전트로 실행:
 
 ```
 컨텍스트:
@@ -193,17 +199,30 @@ stdout JSON에서 추출:
 - 프로젝트 경로: /Users/luke-gyu/dev/study/NLP
 ```
 
-`docs/sprint-XX.md` 생성 확인.
+`docs/<SPRINT_ID>.md` 파일 존재 여부를 Bash로 확인. 없으면 Documenter 재실행.
 
-2. **진행 상태 갱신** — `.harness/claude-progress.txt` 업데이트 (`[IN_PROGRESS] → [PASS]`)
+**6-2. 진행 상태 갱신** (필수)
 
-3. **Git 커밋** — `git commit -m "[harness] <SPRINT_ID> → PASS"`
+`.harness/claude-progress.txt` 업데이트:
+- 해당 스프린트를 `[IN_PROGRESS] → [DONE]` 으로 변경
+- `완료된 스프린트` 섹션으로 이동
+- 다음 스프린트를 `[PENDING] → [IN_PROGRESS]` 로 변경
+
+**6-3. Git 커밋** (필수)
+
+```bash
+git add docs/<SPRINT_ID>.md .harness/claude-progress.txt
+git commit -m "[harness] <SPRINT_ID> → PASS"
+```
+
+위 3단계 완료 후 최종 요약을 출력하고 종료.
 
 ---
 
+**FAIL인 경우:**
+
 | 조건 | 처리 |
 |---|---|
-| `overall == PASS` | Documenter 실행 → progress 갱신 → git commit |
 | `overall == FAIL` && `attempt < 3` | failed_acs 목록과 피드백 파일 경로를 포함해 Step 1 재시도 |
 | `overall == FAIL` && `attempt == 3` | `.harness/escalation-log.md`에 기록 후 에스컬레이션 |
 
