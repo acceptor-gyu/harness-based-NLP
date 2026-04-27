@@ -1,0 +1,30 @@
+{
+  "val_accuracy": 0.9024904599317132,
+  "best_val_loss": 0.35758036275555094,
+  "best_epoch": 3,
+  "total_epochs_run": 3,
+  "checkpoint_path": "/Users/luke-gyu/dev/study/NLP/artifacts/checkpoints/best_20260427T082245Z.pt",
+  "log_path": "/Users/luke-gyu/dev/study/NLP/logs/training_20260427T082245Z.json",
+  "epoch_logs": [
+    {
+      "epoch": 1,
+      "train_loss": 0.372745,
+      "val_loss": 0.298366,
+      "val_acc": 0.881998
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.21679,
+      "val_loss": 0.324818,
+      "val_acc": 0.883128
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.135542,
+      "val_loss": 0.35758,
+      "val_acc": 0.887145
+    }
+  ],
+  "val_eval_samples": 19916,
+  "val_eval_note": "full val set (149k train → 13.3% split)"
+}
