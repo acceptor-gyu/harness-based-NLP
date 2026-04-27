@@ -98,11 +98,12 @@ def train_epoch(
     optimizer: torch.optim.Optimizer,
     scheduler: Any,
     device: torch.device,
+    log_interval: int = 200,
 ) -> float:
     """1 에폭 학습 후 평균 train loss 반환."""
     model.train()
     total_loss = 0.0
-    for batch in loader:
+    for step, batch in enumerate(loader, 1):
         input_ids = batch["input_ids"].to(device)
         attention_mask = batch["attention_mask"].to(device)
         labels = batch["labels"].to(device)
@@ -119,6 +120,10 @@ def train_epoch(
         optimizer.step()
         scheduler.step()
         total_loss += loss.item()
+
+        if step % log_interval == 0:
+            avg = total_loss / step
+            logger.info(f"  step {step}/{len(loader)} — avg_loss={avg:.4f}")
 
     return total_loss / len(loader)
 
@@ -330,7 +335,7 @@ def train(
     for epoch in range(1, num_epochs + 1):
         logger.info(f"--- Epoch {epoch}/{num_epochs} 시작 ---")
 
-        train_loss = train_epoch(model, train_loader, optimizer, scheduler, device)
+        train_loss = train_epoch(model, train_loader, optimizer, scheduler, device, log_interval=200)
         val_loss, val_acc = eval_epoch(model, val_loader, device)
 
         epoch_log: dict[str, Any] = {
