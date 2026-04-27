@@ -359,8 +359,8 @@ def train(
             f"val_acc={val_acc:.4f}"
         )
 
-        # Best 체크포인트 업데이트
-        if val_loss < best_val_loss:
+        # Best 체크포인트 업데이트 (val_acc 최대화 기준 — AC-04-01)
+        if val_acc > best_val_acc:
             best_val_loss = val_loss
             best_val_acc = val_acc
             best_epoch = epoch
@@ -375,11 +375,11 @@ def train(
                 },
                 timestamp=timestamp,
             )
-            logger.info(f"Best 모델 갱신 — epoch={epoch}, val_loss={val_loss:.4f}")
+            logger.info(f"Best 모델 갱신 — epoch={epoch}, val_acc={val_acc:.4f}")
         else:
             patience_counter += 1
             logger.info(
-                f"Val loss 증가 — patience_counter={patience_counter}/{patience}"
+                f"Val acc 미개선 — patience_counter={patience_counter}/{patience}"
             )
             if patience_counter >= patience:
                 logger.info(
@@ -418,5 +418,5 @@ def train(
 # ──────────────────────────────────────────────
 
 if __name__ == "__main__":
-    metrics = train(max_train_samples=15000)
+    metrics = train(max_train_samples=30000, patience=2)
     logger.info(f"최종 Val Accuracy: {metrics['val_accuracy']:.4f}")
