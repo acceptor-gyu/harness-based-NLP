@@ -1,7 +1,7 @@
 === HARNESS PROGRESS FILE ===
 프로젝트: 한국어 감성 분석기 (sentiment-analyzer)
 계약서: .harness/sprint-contract.yaml
-마지막 갱신: 2026-04-27 10:14 UTC (session=2eff33e8)
+마지막 갱신: 2026-04-27 10:25 UTC (session=9bcdcf51)
 
 === 완료된 스프린트 ===
 [PASS] sprint-01: 환경 세팅 및 데이터 로드
@@ -22,12 +22,17 @@
   - 결과: PASS (AC-03-01, AC-03-02, AC-03-03, AC-03-04 전체 PASS)
   - 비고: accuracy=0.8612, f1=0.8612 (word+char TF-IDF FeatureUnion + LR)
 
+[PASS] sprint-04: BERT 파인튜닝
+  - 완료: 2026-04-27
+  - 브랜치: sprint-04/bert-finetuning
+  - 결과: PASS (AC-04-01 ~ AC-04-05 전체 PASS)
+  - 비고: klue/roberta-base, 30k 샘플 학습, val_accuracy=0.9025 (전체 19k val 세트 기준), best_epoch=3
+
 === 현재 스프린트 ===
-[IN_PROGRESS] sprint-04: BERT 파인튜닝
-  - 다음 작업: src/train.py 구현 (AutoModelForSequenceClassification)
+[IN_PROGRESS] sprint-05: 평가 및 리포트
+  - 다음 작업: src/evaluate.py 구현 (best 체크포인트 로드 후 Test 평가)
 
 === 대기 중인 스프린트 ===
-[PENDING] sprint-05: 평가 및 리포트
 [PENDING] sprint-06: Gradio UI (선택)
 
 === 환경 정보 ===

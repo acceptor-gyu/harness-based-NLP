@@ -198,6 +198,8 @@ def load_checkpoint(ckpt_path: Path, device: torch.device) -> nn.Module:
     if not ckpt_path.exists():
         raise FileNotFoundError(f"체크포인트 없음: {ckpt_path}")
     checkpoint = torch.load(ckpt_path, map_location=device, weights_only=False)
+    if "model_state_dict" not in checkpoint:
+        raise KeyError(f"유효하지 않은 체크포인트 — 'model_state_dict' 키 없음: {ckpt_path}")
     model_name = checkpoint.get("model_name", MODEL_NAME)
     num_labels = checkpoint.get("num_labels", NUM_LABELS)
     model = AutoModelForSequenceClassification.from_pretrained(
