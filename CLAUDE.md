@@ -29,8 +29,9 @@
 
 ## Orchestrator (Claude Code Agent)
 - 실행: `Agent(subagent_type="orchestrator", prompt="sprint-XX를 실행하십시오.")`
-- sprint-contract.yaml 없으면 planner 먼저 실행 → plan-validator → generator → 병렬 리뷰어(bug/ml/test) → review-synthesis → slop-cleaner → evaluator 순으로 서브에이전트를 조율.
+- sprint-contract.yaml 없으면 planner 먼저 실행 → plan-validator → generator → 병렬 리뷰어(bug/ml/test) → review-synthesis → slop-cleaner → evaluator → documenter 순으로 서브에이전트를 조율.
 - semantic_eval AC는 evaluator-llm 서브에이전트로 위임.
+- evaluator PASS 시 documenter 서브에이전트를 실행하여 `docs/sprint-XX.md` 생성.
 - Stop Condition 및 최대 3회 재시도 관리는 orchestrator 에이전트 내에서 처리.
 
 ## Evaluator (자동화 + Haiku 서브에이전트)
