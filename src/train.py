@@ -251,6 +251,7 @@ def train(
     max_length: int = MAX_LENGTH,
     random_seed: int = RANDOM_SEED,
     model_name: str = MODEL_NAME,
+    max_train_samples: int | None = None,
 ) -> dict[str, Any]:
     """BERT 파인튜닝 전체 파이프라인을 실행한다.
 
@@ -289,6 +290,11 @@ def train(
     # ── 1. 데이터 로드
     logger.info("데이터 로드 중...")
     train_df, test_df = load_nsmc()
+
+    if max_train_samples and len(train_df) > max_train_samples:
+        train_df = train_df.sample(n=max_train_samples, random_state=random_seed).reset_index(drop=True)
+        logger.info(f"학습 데이터 샘플링: {max_train_samples}건 (전체 중 일부)")
+
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     train_loader, val_loader, _ = build_dataloaders(
         train_df=train_df,
@@ -412,5 +418,5 @@ def train(
 # ──────────────────────────────────────────────
 
 if __name__ == "__main__":
-    metrics = train()
+    metrics = train(max_train_samples=15000)
     logger.info(f"최종 Val Accuracy: {metrics['val_accuracy']:.4f}")
