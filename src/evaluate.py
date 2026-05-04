@@ -29,8 +29,10 @@ from sklearn.metrics import (
 )
 from transformers import AutoTokenizer
 
+from torch.utils.data import DataLoader
+
 from src.data_loader import load_nsmc
-from src.preprocess import build_dataloaders
+from src.preprocess import NSMCDataset, clean_text, build_dataloaders
 from src.train import get_device, load_checkpoint
 
 # ──────────────────────────────────────────────
@@ -42,7 +44,7 @@ CHECKPOINTS_DIR = ARTIFACTS_DIR / "checkpoints"
 
 MODEL_NAME = "klue/roberta-base"
 RANDOM_SEED = 42
-BATCH_SIZE = 64
+BATCH_SIZE = 32  # 학습 eval과 동일한 배치 사이즈 사용
 MAX_LENGTH = 128
 
 
@@ -80,19 +82,24 @@ def run_inference(
     Returns:
         (true_labels, pred_labels, max_confidences) 리스트 튜플.
     """
-    logger.info("데이터 로드 중 (Test 세트)...")
-    train_df, test_df = load_nsmc()
+    logger.info("데이터 로드 중 (Test 세트만 토크나이즈)...")
+    _, test_df = load_nsmc()
+
+    # test_df만 클리닝 후 직접 DataLoader 생성 (train/val 토크나이즈 생략 → 대폭 빠름)
+    test_df = test_df.copy()
+    test_df["document"] = test_df["document"].apply(clean_text)
+    test_df = test_df[test_df["document"].str.strip() != ""].reset_index(drop=True)
+    logger.info(f"Test 클리닝 후 샘플 수: {len(test_df)}")
 
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-    _, _, test_loader = build_dataloaders(
-        train_df=train_df,
-        test_df=test_df,
+    test_dataset = NSMCDataset(
+        texts=test_df["document"].tolist(),
+        labels=test_df["label"].tolist(),
         tokenizer=tokenizer,
-        model_name=MODEL_NAME,
         max_length=MAX_LENGTH,
-        batch_size=BATCH_SIZE,
-        random_seed=RANDOM_SEED,
     )
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    logger.info(f"Test DataLoader 생성 완료 — 배치 수: {len(test_loader)}")
 
     model = load_checkpoint(ckpt_path, device)
     model.eval()
@@ -103,25 +110,21 @@ def run_inference(
 
     logger.info(f"Test 추론 시작 — 배치 수: {len(test_loader)}")
     log_interval = max(1, len(test_loader) // 10)
-    with torch.no_grad():
+    with torch.inference_mode():
         for step, batch in enumerate(test_loader, 1):
             input_ids = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)
-            labels = batch["labels"].to(device)
+            labels = batch["labels"]  # labels는 CPU에서 처리
 
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-            logits = outputs.logits
+            logits = outputs.logits.cpu()
             probs = torch.softmax(logits, dim=-1)
             preds = logits.argmax(dim=-1)
             confs = probs.max(dim=-1).values
 
-            # MPS: flush pending ops so results are usable on CPU
-            if device.type == "mps":
-                torch.mps.synchronize()
-
-            all_labels.extend(labels.cpu().tolist())
-            all_preds.extend(preds.cpu().tolist())
-            all_confs.extend(confs.cpu().tolist())
+            all_labels.extend(labels.tolist())
+            all_preds.extend(preds.tolist())
+            all_confs.extend(confs.tolist())
 
             if step % log_interval == 0:
                 logger.info(f"  추론 진행: {step}/{len(test_loader)} 배치")
@@ -267,10 +270,8 @@ def enrich_misclassified_with_text(
     misclassified: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """Test 원본 텍스트를 오분류 샘플에 추가한다."""
-    from src.preprocess import clean_text
-
     _, test_df = load_nsmc()
-    # preprocess와 동일한 클리닝 적용
+    # run_inference와 동일한 클리닝 적용
     test_df = test_df.copy()
     test_df["document"] = test_df["document"].apply(clean_text)
     test_df = test_df[test_df["document"].str.strip() != ""].reset_index(drop=True)
