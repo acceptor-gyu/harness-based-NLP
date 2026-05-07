@@ -77,11 +77,9 @@ def set_seed(seed: int = RANDOM_SEED) -> None:
 # ──────────────────────────────────────────────
 
 def get_device() -> torch.device:
-    """cuda → mps → cpu 우선순위로 디바이스를 선택한다."""
+    """cuda → cpu 우선순위로 디바이스를 선택한다. MPS 스로틀링 방지를 위해 제외."""
     if torch.cuda.is_available():
         device = torch.device("cuda")
-    elif torch.backends.mps.is_available():
-        device = torch.device("mps")
     else:
         device = torch.device("cpu")
     logger.info(f"사용 디바이스: {device}")
