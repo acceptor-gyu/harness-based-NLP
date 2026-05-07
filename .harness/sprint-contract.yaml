@@ -188,10 +188,12 @@ sprints:
       - id: "AC-05-01"
         description: "Test Accuracy ≥ 0.90"
         verification: "metric_threshold"
+        metric_key: "accuracy"
         threshold: 0.90
       - id: "AC-05-02"
         description: "Test Macro F1 ≥ 0.88"
         verification: "metric_threshold"
+        metric_key: "f1"
         threshold: 0.88
       - id: "AC-05-03"
         description: "artifacts/confusion_matrix.png 존재, PNG 유효"
@@ -199,6 +201,10 @@ sprints:
       - id: "AC-05-04"
         description: "artifacts/eval_report.md에 베이스라인 vs BERT 성능 비교표 포함"
         verification: "file_schema"
+        path: "artifacts/eval_report.md"
+        required_keys:
+          - "베이스라인"
+          - "BERT"
       - id: "AC-05-05"
         description: "오분류 케이스 20건 분석 및 원인 분류(3개 이상 카테고리) 기록"
         verification: "semantic_eval"
