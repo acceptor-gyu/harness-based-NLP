@@ -420,5 +420,5 @@ def train(
 # ──────────────────────────────────────────────
 
 if __name__ == "__main__":
-    metrics = train(max_train_samples=50000, patience=3, batch_size=32)
+    metrics = train(max_train_samples=80000, patience=3, batch_size=32)
     logger.info(f"최종 Val Accuracy: {metrics['val_accuracy']:.4f}")
