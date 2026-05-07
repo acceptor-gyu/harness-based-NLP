@@ -1,7 +1,7 @@
 === HARNESS PROGRESS FILE ===
 프로젝트: 한국어 감성 분석기 (sentiment-analyzer)
 계약서: .harness/sprint-contract.yaml
-마지막 갱신: 2026-05-07 17:45 UTC (session=7ca8ab86)
+마지막 갱신: 2026-05-07 18:30 UTC (session=7ca8ab86)
 
 === 완료된 스프린트 ===
 [PASS] sprint-01: 환경 세팅 및 데이터 로드
@@ -26,14 +26,19 @@
   - 완료: 2026-04-27
   - 브랜치: sprint-04/bert-finetuning
   - 결과: PASS (AC-04-01 ~ AC-04-05 전체 PASS)
-  - 비고: klue/roberta-base, 30k 샘플 학습, val_accuracy=0.9025 (전체 19k val 세트 기준), best_epoch=3
+  - 비고: klue/roberta-base, 80k 샘플 학습, val_accuracy=0.9036, best_epoch=3, checkpoint=best_20260507T122610Z.pt
+
+[PASS] sprint-05: 평가 및 리포트
+  - 완료: 2026-05-07
+  - 브랜치: sprint-05/evaluation-report
+  - 결과: PASS (AC-05-01 ~ AC-05-05 전체 PASS)
+  - 비고: test_accuracy=0.9020, test_f1=0.9020 (베이스라인 대비 +0.04p), 오분류 20건/4카테고리 분석
 
 === 현재 스프린트 ===
-[IN_PROGRESS] sprint-05: 평가 및 리포트
-  - 다음 작업: src/evaluate.py 구현 (best 체크포인트 로드 후 Test 평가)
+[PENDING] sprint-06: Gradio UI (선택)
 
 === 대기 중인 스프린트 ===
-[PENDING] sprint-06: Gradio UI (선택)
+(없음)
 
 === 환경 정보 ===
 Python: 3.12.2 (uv 환경)
