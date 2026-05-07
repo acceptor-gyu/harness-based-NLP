@@ -44,7 +44,7 @@ CHECKPOINTS_DIR = ARTIFACTS_DIR / "checkpoints"
 
 MODEL_NAME = "klue/roberta-base"
 RANDOM_SEED = 42
-BATCH_SIZE = 32  # 학습 eval과 동일한 배치 사이즈 사용
+BATCH_SIZE = 64  # CPU 추론에서 더 효율적인 배치 사이즈
 MAX_LENGTH = 128
 
 
@@ -496,7 +496,8 @@ def evaluate(
         최종 메트릭 딕셔너리.
     """
     logger.info("=== sprint-05 평가 시작 ===")
-    device = get_device()
+    device = torch.device("cpu")
+    logger.info("추론 디바이스: cpu (MPS 스로틀링 방지)")
 
     if ckpt_path is None:
         ckpt_path = find_best_checkpoint()
