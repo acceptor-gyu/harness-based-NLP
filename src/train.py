@@ -77,9 +77,11 @@ def set_seed(seed: int = RANDOM_SEED) -> None:
 # ──────────────────────────────────────────────
 
 def get_device() -> torch.device:
-    """cuda → cpu 우선순위로 디바이스를 선택한다. MPS 스로틀링 방지를 위해 제외."""
+    """cuda → mps → cpu 우선순위로 디바이스를 선택한다."""
     if torch.cuda.is_available():
         device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
     else:
         device = torch.device("cpu")
     logger.info(f"사용 디바이스: {device}")
@@ -418,9 +420,5 @@ def train(
 # ──────────────────────────────────────────────
 
 if __name__ == "__main__":
-    import multiprocessing
-    n_cpu = multiprocessing.cpu_count()
-    torch.set_num_threads(n_cpu)
-    logger.info(f"CPU 스레드 수: {n_cpu}")
-    metrics = train(max_train_samples=50000, patience=3, batch_size=64)
+    metrics = train(max_train_samples=50000, patience=3, batch_size=32)
     logger.info(f"최종 Val Accuracy: {metrics['val_accuracy']:.4f}")
