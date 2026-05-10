@@ -14,6 +14,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+import re
+
 import matplotlib
 matplotlib.use("Agg")  # GUI 없는 환경에서도 동작
 import matplotlib.pyplot as plt
@@ -299,8 +301,6 @@ def categorize_errors(
     Returns:
         카테고리명 → 해당하는 샘플의 index 리스트 딕셔너리.
     """
-    import re
-
     NEGATION_PATTERNS = re.compile(
         r"(안|못|없|별로|그냥|그저|별|아니|싫|힘들|나쁘|최악|실망|지루|재미없|별로)"
     )
@@ -478,6 +478,7 @@ def write_eval_report(
 def evaluate(
     ckpt_path: Path | None = None,
     batch_size: int = BATCH_SIZE,
+    device: torch.device | None = None,
 ) -> dict[str, Any]:
     """Test 세트 전체 평가 파이프라인을 실행한다.
 
@@ -491,13 +492,17 @@ def evaluate(
     Args:
         ckpt_path: 사용할 체크포인트 경로. None이면 자동 탐색.
         batch_size: 추론 배치 크기.
+        device: 연산 디바이스. None이면 cpu 사용 (MPS 장시간 추론 스로틀링 방지).
 
     Returns:
         최종 메트릭 딕셔너리.
     """
     logger.info("=== sprint-05 평가 시작 ===")
-    device = torch.device("cpu")
-    logger.info("추론 디바이스: cpu (MPS 스로틀링 방지)")
+    if device is None:
+        device = torch.device("cpu")
+        logger.info("추론 디바이스: cpu (MPS 스로틀링 방지)")
+    else:
+        logger.info(f"추론 디바이스: {device}")
 
     if ckpt_path is None:
         ckpt_path = find_best_checkpoint()

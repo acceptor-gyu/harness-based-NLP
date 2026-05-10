@@ -67,8 +67,8 @@ def set_seed(seed: int = RANDOM_SEED) -> None:
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
-    # MPS / CPU determinism
-    torch.use_deterministic_algorithms(False)
+    # CUDA 환경에서 CUBLAS_WORKSPACE_CONFIG=:4096:8 설정 필요할 수 있음
+    torch.use_deterministic_algorithms(True, warn_only=True)
     logger.debug(f"랜덤 시드 설정: {seed}")
 
 
@@ -125,7 +125,7 @@ def train_epoch(
             avg = total_loss / step
             logger.info(f"  step {step}/{len(loader)} — avg_loss={avg:.4f}")
 
-    return total_loss / len(loader)
+    return total_loss / len(loader) if len(loader) > 0 else 0.0
 
 
 def eval_epoch(
@@ -197,7 +197,7 @@ def load_checkpoint(ckpt_path: Path, device: torch.device) -> nn.Module:
     """
     if not ckpt_path.exists():
         raise FileNotFoundError(f"체크포인트 없음: {ckpt_path}")
-    checkpoint = torch.load(ckpt_path, map_location=device, weights_only=False)
+    checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
     if "model_state_dict" not in checkpoint:
         raise KeyError(f"유효하지 않은 체크포인트 — 'model_state_dict' 키 없음: {ckpt_path}")
     model_name = checkpoint.get("model_name", MODEL_NAME)
@@ -361,8 +361,8 @@ def train(
             f"val_acc={val_acc:.4f}"
         )
 
-        # Best 체크포인트 업데이트 (val_acc 최대화 기준 — AC-04-01)
-        if val_acc > best_val_acc:
+        # Best 체크포인트 업데이트 — val_loss 감소 기준 (sprint-contract AC-04-04)
+        if val_loss < best_val_loss:
             best_val_loss = val_loss
             best_val_acc = val_acc
             best_epoch = epoch
@@ -377,11 +377,11 @@ def train(
                 },
                 timestamp=timestamp,
             )
-            logger.info(f"Best 모델 갱신 — epoch={epoch}, val_acc={val_acc:.4f}")
+            logger.info(f"Best 모델 갱신 — epoch={epoch}, val_loss={val_loss:.4f}, val_acc={val_acc:.4f}")
         else:
             patience_counter += 1
             logger.info(
-                f"Val acc 미개선 — patience_counter={patience_counter}/{patience}"
+                f"Val loss 미개선 — patience_counter={patience_counter}/{patience}"
             )
             if patience_counter >= patience:
                 logger.info(
@@ -420,5 +420,5 @@ def train(
 # ──────────────────────────────────────────────
 
 if __name__ == "__main__":
-    metrics = train(max_train_samples=80000, patience=3, batch_size=32)
+    metrics = train(max_train_samples=80000, patience=1, batch_size=32)
     logger.info(f"최종 Val Accuracy: {metrics['val_accuracy']:.4f}")
