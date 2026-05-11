@@ -154,7 +154,7 @@ def eval_epoch(
             correct += (preds == labels).sum().item()
             total += labels.size(0)
 
-    val_loss = total_loss / len(loader)
+    val_loss = total_loss / len(loader) if len(loader) > 0 else 0.0
     val_acc = correct / total if total > 0 else 0.0
     return val_loss, val_acc
 

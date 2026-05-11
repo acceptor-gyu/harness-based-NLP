@@ -19,7 +19,6 @@ import re
 import matplotlib
 matplotlib.use("Agg")  # GUI 없는 환경에서도 동작
 import matplotlib.pyplot as plt
-import numpy as np
 import torch
 from loguru import logger
 from sklearn.metrics import (
@@ -74,12 +73,14 @@ def find_best_checkpoint() -> Path:
 def run_inference(
     ckpt_path: Path,
     device: torch.device,
+    batch_size: int = BATCH_SIZE,
 ) -> tuple[list[int], list[int], list[float]]:
     """Test 세트에 대해 추론을 실행하고 (labels, preds, confidence) 를 반환한다.
 
     Args:
         ckpt_path: best_*.pt 파일 경로.
         device: 연산 디바이스.
+        batch_size: DataLoader 배치 크기.
 
     Returns:
         (true_labels, pred_labels, max_confidences) 리스트 튜플.
@@ -100,7 +101,7 @@ def run_inference(
         tokenizer=tokenizer,
         max_length=MAX_LENGTH,
     )
-    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     logger.info(f"Test DataLoader 생성 완료 — 배치 수: {len(test_loader)}")
 
     model = load_checkpoint(ckpt_path, device)
@@ -508,7 +509,7 @@ def evaluate(
         ckpt_path = find_best_checkpoint()
 
     # ── 1. 추론
-    true_labels, pred_labels, confidences = run_inference(ckpt_path, device)
+    true_labels, pred_labels, confidences = run_inference(ckpt_path, device, batch_size)
 
     # ── 2. 메트릭
     metrics = compute_metrics(true_labels, pred_labels)
