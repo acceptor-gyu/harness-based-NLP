@@ -133,12 +133,16 @@ def predict(text: str) -> tuple[str, float, float]:
 # ──────────────────────────────────────────────
 
 def _gradio_predict(text: str) -> dict[str, float]:
-    """Gradio Label 컴포넌트용 래퍼. {label: confidence} 딕셔너리 반환."""
+    """Gradio Label 컴포넌트용 래퍼. 긍정/부정 두 클래스의 확률을 딕셔너리로 반환."""
     if not text or not text.strip():
         return {"입력 없음": 1.0}
     label, confidence, elapsed = predict(text)
     logger.info(f"요청 처리 완료 — label={label}, confidence={confidence:.4f}, elapsed={elapsed:.3f}s")
-    return {label: round(confidence, 6)}
+    other_label = LABEL_MAP[0] if label == LABEL_MAP[1] else LABEL_MAP[1]
+    return {
+        label: round(confidence, 6),
+        other_label: round(1.0 - confidence, 6),
+    }
 
 
 def build_interface() -> Any:
@@ -208,4 +212,12 @@ def main(
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="한국어 감성 분석기 Gradio 서버")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="바인딩 호스트 (기본: 0.0.0.0)")
+    parser.add_argument("--port", type=int, default=7860, help="서버 포트 (기본: 7860)")
+    parser.add_argument("--share", action="store_true", help="Gradio 공개 링크 생성")
+    args = parser.parse_args()
+
+    main(host=args.host, port=args.port, share=args.share)
