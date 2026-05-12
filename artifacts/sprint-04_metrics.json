@@ -1,27 +1,27 @@
 {
-  "val_accuracy": 0.9036070132076929,
-  "best_val_loss": 0.3053856959198544,
-  "best_epoch": 3,
+  "val_accuracy": 0.9024484436549007,
+  "best_val_loss": 0.26299516444128973,
+  "best_epoch": 2,
   "total_epochs_run": 3,
-  "checkpoint_path": "/Users/luke-gyu/dev/study/NLP/artifacts/checkpoints/best_20260507T122610Z.pt",
-  "log_path": "/Users/luke-gyu/dev/study/NLP/logs/training_20260507T122610Z.json",
+  "checkpoint_path": "/Users/luke-gyu/dev/study/NLP/artifacts/checkpoints/best_20260512T070251Z.pt",
+  "log_path": "/Users/luke-gyu/dev/study/NLP/logs/training_20260512T070251Z.json",
   "epoch_logs": [
     {
       "epoch": 1,
-      "train_loss": 0.334152,
-      "val_loss": 0.260667,
-      "val_acc": 0.895497
+      "train_loss": 0.333386,
+      "val_loss": 0.263902,
+      "val_acc": 0.895265
     },
     {
       "epoch": 2,
-      "train_loss": 0.208358,
-      "val_loss": 0.273087,
-      "val_acc": 0.900595
+      "train_loss": 0.209084,
+      "val_loss": 0.262995,
+      "val_acc": 0.902448
     },
     {
       "epoch": 3,
-      "train_loss": 0.139937,
-      "val_loss": 0.305386,
+      "train_loss": 0.139149,
+      "val_loss": 0.313822,
       "val_acc": 0.903607
     }
   ]
