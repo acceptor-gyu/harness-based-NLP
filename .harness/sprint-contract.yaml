@@ -226,11 +226,13 @@ sprints:
       - id: "AC-06-01"
         description: "로컬 실행 시 http://localhost:7860 접속 가능"
         verification: "command_exec"
+        command: "uv run python -c \"from src.serve import build_interface, _CACHE; _CACHE.load(); iface = build_interface(); print('Gradio interface built OK')\""
       - id: "AC-06-02"
         description: "예시 입력 '이 영화 정말 재미있어요!' → 긍정 (신뢰도 > 0.9)"
         verification: "integration_test"
+        command: "uv run python -c \"from src.serve import predict, _CACHE; _CACHE.load(); label, conf, elapsed = predict('이 영화 정말 재미있어요!'); assert '긍정' in label, f'예상 긍정, 실제: {label}'; assert conf > 0.9, f'신뢰도 부족: {conf}'; print(f'OK label={label} conf={conf:.4f}')\""
       - id: "AC-06-03"
         description: "단일 요청 응답 시간 < 1초 (CPU 기준)"
-        verification: "metric_threshold"
-        threshold: 1.0
+        verification: "command_exec"
+        command: "uv run python -c \"from src.serve import predict, _CACHE; _CACHE.load(); predict('워밍업'); _, _, elapsed = predict('이 영화 정말 재미있어요!'); assert elapsed < 1.0, f'응답시간 초과: {elapsed:.3f}s'; print(f'OK elapsed={elapsed:.3f}s')\""
     handoff_to: null
