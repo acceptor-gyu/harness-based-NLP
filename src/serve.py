@@ -9,6 +9,7 @@ klue/roberta-base 파인튜닝 모델을 Gradio Interface로 제공한다.
 """
 from __future__ import annotations
 
+import argparse
 import time
 from pathlib import Path
 from typing import Any
@@ -138,6 +139,8 @@ def _gradio_predict(text: str) -> dict[str, float]:
         return {"입력 없음": 1.0}
     label, confidence, elapsed = predict(text)
     logger.info(f"요청 처리 완료 — label={label}, confidence={confidence:.4f}, elapsed={elapsed:.3f}s")
+    if label not in LABEL_MAP.values():
+        return {label: 1.0}
     other_label = LABEL_MAP[0] if label == LABEL_MAP[1] else LABEL_MAP[1]
     return {
         label: round(confidence, 6),
@@ -212,8 +215,6 @@ def main(
 
 
 if __name__ == "__main__":
-    import argparse
-
     parser = argparse.ArgumentParser(description="한국어 감성 분석기 Gradio 서버")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="바인딩 호스트 (기본: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=7860, help="서버 포트 (기본: 7860)")
