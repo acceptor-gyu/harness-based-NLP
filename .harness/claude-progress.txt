@@ -34,8 +34,14 @@
   - 결과: PASS (AC-05-01 ~ AC-05-05 전체 PASS)
   - 비고: test_accuracy=0.9020, test_f1=0.9020 (베이스라인 대비 +0.04p), 오분류 20건/4카테고리 분석
 
+[PASS] sprint-06: Gradio UI (선택)
+  - 완료: 2026-05-12
+  - 브랜치: sprint-06/gradio-ui
+  - 결과: PASS (AC-06-01, AC-06-02, AC-06-03 전체 PASS)
+  - 비고: gradio==6.13.0, 예측 conf=0.9804 (>0.9), 응답시간=0.026s (<1s)
+
 === 현재 스프린트 ===
-[PENDING] sprint-06: Gradio UI (선택)
+(없음 — 전체 스프린트 완료)
 
 === 대기 중인 스프린트 ===
 (없음)

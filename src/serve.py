@@ -10,7 +10,6 @@ klue/roberta-base 파인튜닝 모델을 Gradio Interface로 제공한다.
 from __future__ import annotations
 
 import time
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
