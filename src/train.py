@@ -104,9 +104,9 @@ def train_epoch(
     model.train()
     total_loss = 0.0
     for step, batch in enumerate(loader, 1):
-        input_ids = batch["input_ids"].to(device)
-        attention_mask = batch["attention_mask"].to(device)
-        labels = batch["labels"].to(device)
+        input_ids = batch["input_ids"].to(device, non_blocking=True)
+        attention_mask = batch["attention_mask"].to(device, non_blocking=True)
+        labels = batch["labels"].to(device, non_blocking=True)
 
         optimizer.zero_grad()
         outputs = model(
@@ -140,9 +140,9 @@ def eval_epoch(
     total = 0
     with torch.no_grad():
         for batch in loader:
-            input_ids = batch["input_ids"].to(device)
-            attention_mask = batch["attention_mask"].to(device)
-            labels = batch["labels"].to(device)
+            input_ids = batch["input_ids"].to(device, non_blocking=True)
+            attention_mask = batch["attention_mask"].to(device, non_blocking=True)
+            labels = batch["labels"].to(device, non_blocking=True)
 
             outputs = model(
                 input_ids=input_ids,
@@ -206,7 +206,7 @@ def load_checkpoint(ckpt_path: Path, device: torch.device) -> nn.Module:
         model_name, num_labels=num_labels
     )
     model.load_state_dict(checkpoint["model_state_dict"])
-    model.to(device)
+    model.to(device)  # 모델 전체 이전 — non_blocking 불필요
     logger.info(f"체크포인트 로드 완료: {ckpt_path} (metrics={checkpoint.get('metrics')})")
     return model
 
@@ -313,7 +313,7 @@ def train(
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name, num_labels=NUM_LABELS
     )
-    model.to(device)
+    model.to(device)  # 모델 전체 이전 — non_blocking 불필요
 
     # ── 3. 옵티마이저 & 스케줄러
     total_steps = len(train_loader) * num_epochs
