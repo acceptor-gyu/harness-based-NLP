@@ -5,6 +5,8 @@ Train/Val/Test 분할, PyTorch DataLoader 구성을 담당한다.
 """
 from __future__ import annotations
 
+import os
+import platform
 import re
 from pathlib import Path
 from typing import Any
@@ -210,17 +212,71 @@ def build_dataloaders(
     val_dataset = NSMCDataset(val_texts, val_labels, tokenizer, max_length)
     test_dataset = NSMCDataset(test_texts, test_labels, tokenizer, max_length)
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    # macOS MPS 환경 안정성을 위해 num_workers=2, 그 외 min(4, cpu_count)
+    if platform.system() == "Darwin":
+        num_workers = 2
+        multiprocessing_context: str | None = "fork"
+    else:
+        num_workers = min(4, os.cpu_count() or 1)
+        multiprocessing_context = None
+
+    dataloader_kwargs: dict[str, Any] = dict(
+        batch_size=batch_size,
+        pin_memory=True,
+        num_workers=num_workers,
+        persistent_workers=num_workers > 0,
+        multiprocessing_context=multiprocessing_context if num_workers > 0 else None,
+    )
+
+    train_loader = DataLoader(train_dataset, shuffle=True, **dataloader_kwargs)
+    val_loader = DataLoader(val_dataset, shuffle=False, **dataloader_kwargs)
+    test_loader = DataLoader(test_dataset, shuffle=False, **dataloader_kwargs)
 
     logger.info(
         f"DataLoader 완성 — "
         f"train_batches={len(train_loader)}, "
         f"val_batches={len(val_loader)}, "
-        f"test_batches={len(test_loader)}"
+        f"test_batches={len(test_loader)}, "
+        f"num_workers={num_workers}, pin_memory=True"
     )
     return train_loader, val_loader, test_loader
+
+
+def get_dataloaders(
+    batch_size: int = BATCH_SIZE,
+    model_name: str = MODEL_NAME,
+    max_length: int = MAX_LENGTH,
+    val_ratio: float = 0.1,
+    random_seed: int = RANDOM_SEED,
+    remove_stopwords: bool = False,
+) -> tuple[DataLoader[Any], DataLoader[Any]]:
+    """NSMC 데이터를 로드하고 train/val DataLoader를 반환하는 편의 함수.
+
+    Args:
+        batch_size: DataLoader batch 크기.
+        model_name: HuggingFace 모델 이름.
+        max_length: 최대 토큰 길이.
+        val_ratio: 전체 대비 val 비율.
+        random_seed: 재현성 시드.
+        remove_stopwords: 불용어 제거 여부.
+
+    Returns:
+        (train_loader, val_loader) 튜플.
+    """
+    from src.data_loader import load_nsmc
+
+    train_df, test_df = load_nsmc()
+    train_loader, val_loader, _ = build_dataloaders(
+        train_df=train_df,
+        test_df=test_df,
+        model_name=model_name,
+        max_length=max_length,
+        batch_size=batch_size,
+        val_ratio=val_ratio,
+        random_seed=random_seed,
+        remove_stopwords=remove_stopwords,
+    )
+    return train_loader, val_loader
 
 
 def compute_token_length_stats(
