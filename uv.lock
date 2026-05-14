@@ -2812,6 +2812,11 @@ serve = [
     { name = "gradio" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "datasets", specifier = ">=3.0.0" },
@@ -2832,6 +2837,9 @@ requires-dist = [
     { name = "transformers", specifier = ">=4.46.0" },
 ]
 provides-extras = ["serve", "dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=9.0.3" }]
 
 [[package]]
 name = "setuptools"

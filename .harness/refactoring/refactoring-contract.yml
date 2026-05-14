@@ -1,0 +1,170 @@
+project: "한국어 감성 분석기 — Epoch 성능 리팩토링"
+version: "1.0"
+created_at: "2026-05-14"
+source_doc: "docs/epoch-performance.md"
+
+tech_stack:
+  language: "Python 3.11+"
+  framework: "PyTorch + HuggingFace Transformers"
+  model: "klue/roberta-base"
+  dataset: "NSMC"
+  device: ["cuda", "mps", "cpu"]
+
+global_constraints:
+  max_sequence_length: 128
+  random_seed: 42
+  cost_ceiling_usd: 5.0
+  retry_limit_per_refactoring: 3
+
+# 리팩토링 단위 목록
+# 각 항목은 독립적으로 적용·검증 가능하며 순서대로 적용 권장
+refactoring_items:
+
+  - id: "RF-01"
+    title: "DataLoader num_workers 활성화 + pin_memory=True"
+    priority: 1
+    source_bottleneck: "병목 #1 — num_workers=0 동기식 데이터 로딩"
+    files_to_change:
+      - "src/preprocess.py"
+    scope:
+      - "DataLoader 생성 시 num_workers=min(4, os.cpu_count()) 설정"
+      - "pin_memory=True 추가"
+      - "persistent_workers=True 추가 (에폭 간 worker 재시작 오버헤드 제거)"
+    out_of_scope:
+      - "non_blocking 전송 변경 (RF-02에서 처리)"
+      - "AMP 도입 (RF-04에서 처리)"
+    notes:
+      - "macOS MPS 환경에서는 num_workers=2로 시작하여 안정성 확인"
+      - "필요 시 multiprocessing_context='fork' 추가"
+    acceptance_criteria:
+      - id: "AC-RF-01-01"
+        description: "train_loader와 val_loader 모두 num_workers >= 2 이고 pin_memory=True"
+        verification: "python_assert"
+        script: |
+          import sys
+          sys.path.insert(0, "src")
+          from preprocess import get_dataloaders
+          train_loader, val_loader = get_dataloaders(batch_size=32)
+          assert train_loader.num_workers >= 2, f"train num_workers={train_loader.num_workers}"
+          assert val_loader.num_workers >= 2, f"val num_workers={val_loader.num_workers}"
+          assert train_loader.pin_memory, "train pin_memory is False"
+          assert val_loader.pin_memory, "val pin_memory is False"
+      - id: "AC-RF-01-02"
+        description: "DataLoader iteration이 오류 없이 첫 배치를 반환"
+        verification: "python_assert"
+        script: |
+          import sys
+          sys.path.insert(0, "src")
+          from preprocess import get_dataloaders
+          train_loader, _ = get_dataloaders(batch_size=32)
+          batch = next(iter(train_loader))
+          assert "input_ids" in batch
+          assert "attention_mask" in batch
+          assert "labels" in batch
+      - id: "AC-RF-01-03"
+        description: "pytest 전체 통과 (동작 보존)"
+        verification: "command_exec"
+        command: "uv run pytest tests/ -x -q"
+
+  - id: "RF-02"
+    title: "non_blocking=True 비동기 Device 전송"
+    priority: 2
+    source_bottleneck: "병목 #2 — pin_memory=False + 동기 .to(device)"
+    files_to_change:
+      - "src/train.py"
+    scope:
+      - "train_epoch 내 batch tensor .to(device) 호출에 non_blocking=True 추가"
+      - "eval_epoch 내 동일 패턴 적용"
+    out_of_scope:
+      - "pin_memory 변경 (RF-01에서 처리)"
+    notes:
+      - "pin_memory=True 없이는 non_blocking 효과 없음 — RF-01 선행 필수"
+    acceptance_criteria:
+      - id: "AC-RF-02-01"
+        description: "train.py 내 .to(device) 호출이 모두 non_blocking=True를 포함"
+        verification: "command_exec"
+        command: "grep -n '.to(device)' src/train.py | grep -v 'non_blocking=True' | grep -v '#'"
+        # 출력이 비어야 PASS (non_blocking 없는 .to(device) 없음)
+      - id: "AC-RF-02-02"
+        description: "pytest 전체 통과 (동작 보존)"
+        verification: "command_exec"
+        command: "uv run pytest tests/ -x -q"
+
+  - id: "RF-03"
+    title: "use_deterministic_algorithms 학습 시 비활성화"
+    priority: 3
+    source_bottleneck: "병목 #3 — 결정론적 커널 강제"
+    files_to_change:
+      - "src/train.py"
+    scope:
+      - "학습 루프에서 use_deterministic_algorithms(True) 제거 또는 주석 처리"
+      - "필요 시 평가 전용 컨텍스트에서만 활성화하는 패턴으로 교체"
+    out_of_scope:
+      - "시드 고정 로직 변경 금지"
+    acceptance_criteria:
+      - id: "AC-RF-03-01"
+        description: "train.py 학습 루프 경로에 use_deterministic_algorithms(True) 호출 없음"
+        verification: "command_exec"
+        command: "grep -n 'use_deterministic_algorithms(True' src/train.py | grep -v '#'"
+        # 출력이 비어야 PASS
+      - id: "AC-RF-03-02"
+        description: "pytest 전체 통과 (동작 보존)"
+        verification: "command_exec"
+        command: "uv run pytest tests/ -x -q"
+
+  - id: "RF-04"
+    title: "AMP(자동 혼합 정밀도) 적용"
+    priority: 4
+    source_bottleneck: "병목 #4 — fp32 전 구간 연산"
+    files_to_change:
+      - "src/train.py"
+    scope:
+      - "train_epoch에 torch.amp.autocast 컨텍스트 적용"
+      - "CUDA 환경에서 GradScaler 도입"
+      - "device.type에 따라 dtype 자동 선택 (mps/cpu → bfloat16, cuda → float16)"
+      - "optimizer.zero_grad(set_to_none=True)로 교체"
+    out_of_scope:
+      - "eval_epoch AMP 적용 (선택 사항, 이번 범위 외)"
+      - "모델 가중치 dtype 변경 금지"
+    notes:
+      - "GradScaler는 CUDA에서만 활성화 (enabled=device.type=='cuda')"
+      - "MPS는 autocast만 적용, GradScaler 비활성화"
+    acceptance_criteria:
+      - id: "AC-RF-04-01"
+        description: "train.py에 autocast 임포트 및 사용 존재"
+        verification: "command_exec"
+        command: "grep -n 'autocast' src/train.py"
+      - id: "AC-RF-04-02"
+        description: "train.py에 GradScaler 임포트 및 사용 존재"
+        verification: "command_exec"
+        command: "grep -n 'GradScaler' src/train.py"
+      - id: "AC-RF-04-03"
+        description: "short smoke-train (1 step, cpu) 이 오류 없이 완료"
+        verification: "python_assert"
+        script: |
+          import sys, torch
+          sys.path.insert(0, "src")
+          from train import train_epoch
+          from preprocess import get_dataloaders
+          from transformers import AutoModelForSequenceClassification
+          model = AutoModelForSequenceClassification.from_pretrained("klue/roberta-base", num_labels=2)
+          device = torch.device("cpu")
+          model = model.to(device)
+          optimizer = torch.optim.AdamW(model.parameters(), lr=2e-5)
+          scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda _: 1.0)
+          train_loader, _ = get_dataloaders(batch_size=4)
+          # 1 step만 실행
+          import itertools
+          mini_loader = list(itertools.islice(train_loader, 1))
+          loss = train_epoch(model, mini_loader, optimizer, scheduler, device, log_interval=9999)
+          assert isinstance(loss, float) and loss > 0
+      - id: "AC-RF-04-04"
+        description: "pytest 전체 통과 (동작 보존)"
+        verification: "command_exec"
+        command: "uv run pytest tests/ -x -q"
+
+apply_order:
+  - "RF-01"   # num_workers + pin_memory (가장 큰 병목, 낮은 위험)
+  - "RF-02"   # non_blocking (RF-01 선행 필수)
+  - "RF-03"   # deterministic 비활성화
+  - "RF-04"   # AMP (가장 큰 효과, 중간 위험)

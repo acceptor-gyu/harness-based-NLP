@@ -36,3 +36,8 @@ addopts = "-v --tb=short"
 markers = [
   "slow: 전체 데이터셋으로 실행하는 통합 테스트 (학습 포함)",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
